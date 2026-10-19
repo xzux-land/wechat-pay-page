@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="固定额度微信收款页面：选择金额，扫码完成支付">
+<title>微信收款</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2307C160' d='M12 2C6.5 2 2 5.6 2 10c0 2.5 1.4 4.7 3.6 6.2L4.8 19l2.9-1.6c1 .2 2 .3 3 .3h.4C9.3 14.2 10.4 10.5 15 8.3c.5 2.6 1.6 5 3.4 6.7-.3.2-.6.4-.9.6l.5 2.8 2.2-1.2c1.1-.9 2-2.1 2.5-3.4.6 1 .9 2 .9 3.2 0 4.4-4.5 8-10 8-1 0-2-.1-3-.4L9 21.8l-3 1.6v-3C2.4 18.7 0 14.6 0 10 0 4.6 5.4 0 12 0c3.5 0 6.6 1.3 8.9 3.4-1.4-.7-2.9-1.2-4.4-1.4C13.8.7 12.9 2 12 2z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --green: #07C160;
+    --green-dark: #06AD56;
+    --green-bg: #E9F9F0;
+    --text: #1F2329;
+    --text-2: #4E5969;
+    --text-3: #8F959E;
+    --line: #E5E6EB;
+    --bg: #F7F8FA;
+    --card: #FFFFFF;
+    --danger: #F54A45;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 24px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 0 20px;
+  }
+
+  .brand-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .brand-icon svg { width: 34px; height: 34px; fill: #fff; }
+
+  .brand h1 { font-size: 20px; font-weight: 600; }
+
+  .brand .subtitle { margin-top: 4px; font-size: 14px; color: var(--text-2); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(31, 35, 41, 0.04);
+  }
+
+  .card + .card { margin-top: 16px; }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .amount-btn {
+    min-height: 64px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+    padding: 10px 6px;
+    transition: border-color .15s, background-color .15s, color .15s;
+  }
+
+  .amount-btn:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 1px;
+  }
+
+  .amount-btn .amount-label {
+    font-size: 14px;
+    color: var(--text-2);
+  }
+
+  .amount-btn .amount-value {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .amount-btn.selected {
+    border-color: var(--green);
+    background: var(--green-bg);
+    color: var(--green-dark);
+  }
+
+  .amount-btn.selected .amount-label { color: var(--green-dark); }
+
+  .btn {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+    transition: background-color .15s, opacity .15s;
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+  }
+
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: #fff;
+  }
+
+  .btn-primary:not(:disabled):active { background: var(--green-dark); }
+
+  .btn-ghost {
+    background: #fff;
+    color: var(--green-dark);
+    border: 1px solid var(--green);
+    min-height: 44px;
+    margin-top: 12px;
+  }
+
+  .btn-ghost:active { background: var(--green-bg); }
+
+  .hint {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-3);
+    text-align: center;
+  }
+
+  .qr-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 8px;
+  }
+
+  .qr-wrap img {
+    width: 220px;
+    height: 220px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .qr-amount {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .qr-tip {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--text-2);
+    text-align: center;
+  }
+
+  .order-meta {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-3);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    word-break: break-all;
+  }
+
+  .order-meta span:last-child { color: var(--text-2); margin-left: 12px; text-align: right; }
+
+  .countdown {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-3);
+    text-align: center;
+  }
+
+  .status-line {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--green-dark);
+    text-align: center;
+    min-height: 21px;
+  }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--green-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px auto 14px;
+  }
+
+  .success-icon svg { width: 40px; height: 40px; stroke: var(--green); }
+
+  .success-title {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .success-amount {
+    margin-top: 10px;
+    font-size: 30px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--green-dark);
+  }
+
+  .success-note {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--text-2);
+    text-align: center;
+  }
+
+  .view-success .btn { margin-top: 20px; }
+
+  .foot {
+    margin-top: auto;
+    padding-top: 24px;
+    font-size: 12px;
+    color: var(--text-3);
+    text-align: center;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 48px;
+    transform: translateX(-50%) translateY(12px);
+    background: rgba(31, 35, 41, 0.92);
+    color: #fff;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    max-width: 84vw;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 20;
+    text-align: center;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (min-width: 560px) {
+    .page { padding-top: 40px; }
+    .amount-grid { grid-template-columns: repeat(5, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="brand">
+    <div class="brand-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 5.6 2 10c0 2.5 1.4 4.7 3.6 6.2L4.8 19l2.9-1.6c1 .2 2 .3 3 .3h.4C9.3 14.2 10.4 10.5 15 8.3c.5 2.6 1.6 5 3.4 6.7-.3.2-.6.4-.9.6l.5 2.8 2.2-1.2c1.1-.9 2-2.1 2.5-3.4.6 1 .9 2 .9 3.2 0 4.4-4.5 8-10 8-1 0-2-.1-3-.4L9 21.8l-3 1.6v-3C2.4 18.7 0 14.6 0 10 0 4.6 5.4 0 12 0c3.5 0 6.6 1.3 8.9 3.4-1.4-.7-2.9-1.2-4.4-1.4C13.8.7 12.9 2 12 2z"/></svg>
+    </div>
+    <h1 id="brandTitle">微信收款</h1>
+    <p class="subtitle" id="brandSubtitle">选择金额，扫码完成支付</p>
+  </header>
+
+  <!-- ===== 视图：选择金额 ===== -->
+  <section id="view-select" class="card view-select">
+    <h2 class="section-title">选择金额</h2>
+    <div class="amount-grid" id="amountGrid"></div>
+    <button id="payBtn" class="btn btn-primary" disabled>微信支付</button>
+    <p class="hint">点击「微信支付」生成付款二维码</p>
+  </section>
+
+  <!-- ===== 视图：扫码支付 ===== -->
+  <section id="view-qr" class="card view-qr" hidden>
+    <h2 class="section-title">扫码支付</h2>
+    <div class="qr-wrap"><img id="qrImg" alt="付款二维码"></div>
+    <p class="qr-amount" id="qrAmount"></p>
+    <p class="qr-tip">请使用微信「扫一扫」完成支付</p>
+    <div class="order-meta">
+      <span>订单号</span>
+      <span id="qrOrderNo"></span>
+    </div>
+    <p class="countdown" id="countdown"></p>
+    <p class="status-line" id="statusLine" aria-live="polite"></p>
+    <button id="reorderBtn" class="btn btn-ghost">重新下单</button>
+  </section>
+
+  <!-- ===== 视图：支付成功 ===== -->
+  <section id="view-success" class="card view-success" hidden>
+    <div class="success-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.2L20 7"/></svg>
+    </div>
+    <p class="success-title">支付成功</p>
+    <p class="success-amount" id="successAmount"></p>
+    <p class="success-note">感谢您的支持</p>
+    <div class="order-meta">
+      <span>订单号</span>
+      <span id="successOrderNo"></span>
+    </div>
+    <button id="doneBtn" class="btn btn-primary">完成</button>
+  </section>
+
+  <footer class="foot">固定金额收款 · 金额与订单状态由服务端校验</footer>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+  /* ===================== 配置区（部署时只需改这里） ===================== */
+  var CONFIG = {
+    // 后端接口地址：
+    //  - 本地联调：留空 '' 表示页面与后端同源（或直接用 file:// 打开时由后端 CORS 放行）
+    //  - 部署到 GitHub Pages 时：改成你后端服务的公网地址，例如 'https://api.example.com'（不要带末尾斜杠）
+    apiBase: '',
+
+    // 页面标题与副标题
+    title: '微信收款',
+    subtitle: '选择金额，扫码完成支付',
+
+    // 固定额度（元），需与后端 application.yml 中 wechat.pay.allow-amounts 保持一致
+    amounts: [6, 18, 66, 88, 188],
+
+    pollIntervalMs: 2000,
+    expireSeconds: 7200
+  };
+
+  /* ===================== 状态与元素 ===================== */
+  var state = {
+    amount: null,          // 当前选中金额（元）
+    outTradeNo: null,      // 商户订单号
+    expiresAt: 0,          // 二维码失效时间戳
+    pollTimer: null,
+    countdownTimer: null
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  var views = { select: $('view-select'), qr: $('view-qr'), success: $('view-success') };
+
+  /* ===================== 渲染 ===================== */
+  function renderAmounts() {
+    var grid = $('amountGrid');
+    grid.innerHTML = '';
+    CONFIG.amounts.forEach(function (yuan) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'amount-btn';
+      btn.dataset.amount = yuan;
+      var label = document.createElement('span');
+      label.className = 'amount-label';
+      label.textContent = '¥';
+      var value = document.createElement('span');
+      value.className = 'amount-value';
+      value.textContent = String(yuan);
+      btn.appendChild(label);
+      btn.appendChild(value);
+      btn.addEventListener('click', function () { selectAmount(yuan); });
+      grid.appendChild(btn);
+    });
+  }
+
+  function selectAmount(yuan) {
+    state.amount = yuan;
+    var btns = document.querySelectorAll('.amount-btn');
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      if (Number(b.dataset.amount) === yuan) {
+        b.classList.add('selected');
+      } else {
+        b.classList.remove('selected');
+      }
+    }
+    $('payBtn').disabled = false;
+  }
+
+  function switchView(name) {
+    Object.keys(views).forEach(function (key) {
+      views[key].hidden = (key !== name);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetToSelect() {
+    stopPolling();
+    stopCountdown();
+    state.outTradeNo = null;
+    switchView('select');
+  }
+
+  /* ===================== 下单 ===================== */
+  async function createOrder(amount) {
+    var res = await fetch(CONFIG.apiBase + '/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amount })
+    });
+    var json = await res.json();
+    if (!json || json.code !== 0) {
+      throw new Error((json && json.message) || '下单失败，请稍后重试');
+    }
+    return json.data;
+  }
+
+  function setBusy(busy) {
+    var btn = $('payBtn');
+    btn.disabled = busy || state.amount === null;
+    btn.textContent = busy ? '下单中…' : '微信支付';
+  }
+
+  async function pay() {
+    if (state.amount === null) { return; }
+    setBusy(true);
+    try {
+      var data = await createOrder(state.amount);
+      state.outTradeNo = data.outTradeNo;
+      state.expiresAt = Date.now() + (data.expireSeconds || CONFIG.expireSeconds) * 1000;
+      $('qrImg').src = data.qrCodeDataUrl;
+      $('qrAmount').textContent = '¥' + String(state.amount);
+      $('qrOrderNo').textContent = data.outTradeNo;
+      $('statusLine').textContent = '等待扫码支付…';
+      switchView('qr');
+      startPolling();
+      startCountdown();
+    } catch (e) {
+      toast(e.message || '下单失败，请重试');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /* ===================== 轮询支付状态 ===================== */
+  function startPolling() {
+    stopPolling();
+    state.pollTimer = setInterval(poll, CONFIG.pollIntervalMs);
+    poll();
+  }
+
+  function stopPolling() {
+    if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+  }
+
+  async function poll() {
+    if (!state.outTradeNo) { return; }
+    try {
+      var res = await fetch(CONFIG.apiBase + '/api/order-status?outTradeNo=' +
+        encodeURIComponent(state.outTradeNo));
+      var json = await res.json();
+      if (!json || json.code !== 0) { throw new Error(json && json.message); }
+      var d = json.data;
+      if (d.paid) {
+        $('statusLine').textContent = '支付成功';
+        finishSuccess();
+        return;
+      }
+      if (d.tradeState === 'CLOSED' || d.tradeState === 'PAYERROR' || d.tradeState === 'REVOKED') {
+        stopPolling();
+        stopCountdown();
+        toast('订单已关闭或支付失败，请重新下单');
+        resetToSelect();
+        return;
+      }
+      $('statusLine').textContent = (d.tradeState === 'USERPAYING') ? '支付处理中…' : '等待扫码支付…';
+    } catch (e) {
+      $('statusLine').textContent = '状态查询失败，正在重试…';
+    }
+  }
+
+  function finishSuccess() {
+    stopPolling();
+    stopCountdown();
+    $('successAmount').textContent = '¥' + String(state.amount);
+    $('successOrderNo').textContent = state.outTradeNo;
+    switchView('success');
+  }
+
+  /* ===================== 二维码倒计时 ===================== */
+  function startCountdown() {
+    stopCountdown();
+    state.countdownTimer = setInterval(function () {
+      var remain = Math.max(0, Math.round((state.expiresAt - Date.now()) / 1000));
+      if (remain <= 0) {
+        stopPolling();
+        stopCountdown();
+        toast('二维码已过期，请重新下单');
+        resetToSelect();
+        return;
+      }
+      $('countdown').textContent = '二维码将在 ' + remain + ' 秒后失效';
+    }, 1000);
+  }
+
+  function stopCountdown() {
+    if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
+  }
+
+  /* ===================== 提示与初始化 ===================== */
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  }
+
+  $('brandTitle').textContent = CONFIG.title;
+  $('brandSubtitle').textContent = CONFIG.subtitle;
+  $('payBtn').addEventListener('click', pay);
+  $('reorderBtn').addEventListener('click', resetToSelect);
+  $('doneBtn').addEventListener('click', resetToSelect);
+  renderAmounts();
+</script>
+</body>
+</html>
