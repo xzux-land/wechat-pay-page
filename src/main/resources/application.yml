@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: wechat-pay-page
+
+wechat:
+  pay:
+    # 公众号 / 小程序 / APP 的 AppID（需在商户平台「产品中心 → AppID账号管理」与商户号关联）
+    app-id: "请填写你的AppID"
+    # 微信支付商户号（10 位数字）
+    mch-id: "请填写你的商户号"
+    # APIv2 密钥（32 位字符，商户平台 → 账户中心 → API安全 → 设置APIv2密钥）
+    mch-key: "请填写你的APIv2密钥"
+    # 支付结果回调地址：必须是公网可访问的 HTTPS 地址，例如 https://api.example.com/api/notify
+    notify-url: "https://你的域名/api/notify"
+    # 商品描述（展示在用户支付确认页）
+    description: "收款"
+    # 允许的固定金额（单位：元），服务端白名单强制校验，请与前端页面 CONFIG.amounts 保持一致
+    allow-amounts:
+      - 6
+      - 18
+      - 66
+      - 88
+      - 188
+
+logging:
+  level:
+    com.example.wechatpay: info
