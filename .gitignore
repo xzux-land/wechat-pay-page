@@ -1,0 +1,24 @@
+# 编译产物
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 日志
+*.log
+
+# 密钥与证书（严禁提交！）
+*.pem
+*.p12
+apiclient_key.pem
+apiclient_cert.pem
+application-local.yml
+
+# 本地配置备份
+_private/
+
+# 系统文件
+.DS_Store
+Thumbs.db
